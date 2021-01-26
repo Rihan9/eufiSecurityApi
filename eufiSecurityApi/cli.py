@@ -31,6 +31,7 @@ def login(ctx, username, password, tfa):
     ctx.parent.obj.uefyApi = Api(username=username, password=password)
     try:
         asyncio.run(ctx.parent.obj.uefyApi.authenticate())
+        click.echo('TOKEN:%s' % ctx.parent.obj.uefyApi._token)
     except:
         pass
     pass

@@ -1,4 +1,4 @@
-from uefiSecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
+from eufiSecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
 import logging
 from datetime import datetime, timedelta
 

@@ -1,8 +1,8 @@
-from uefiSecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST
+from eufiSecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST
 
 import logging, requests, json, copy
 from datetime import datetime, timedelta #, time as dtTime
-from uefiSecurityApi.model import Device
+from eufiSecurityApi.model import Device
 # import time
 
 _LOGGER = logging.getLogger(__name__)

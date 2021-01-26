@@ -1,2 +1,2 @@
-from uefiSecurityApi.api import Api
-# from uefiSecurityApi.cli import cli
+from eufiSecurityApi.api import Api
+# from eufiSecurityApi.cli import cli
