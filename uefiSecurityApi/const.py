@@ -10,6 +10,9 @@ API_BASE_URL = 'mysecurity.eufylife.com/api'
 ENDPOINT_LOGIN = '/passport/login'
 ENDPOINT_LOGOUT = '/passport/logout'
 ENDPOINT_DEVICE_LIST = '/app/get_devs_list'
+ENDPOINT_STATION_LIST = '/app/get_hub_list'
+
+MOTION_DETECTION_COOLDOWN_MS = 3000
 
 API_HEADERS = {
     'app_version': "v2.3.0_792",
@@ -45,8 +48,16 @@ class RESPONSE_ERROR_CODE(Enum):
     PHONE_NONE_SUPPORT      = 26058
     TOO_MANY_LOGIN_ATTEMPTS = 100028
 
+class DEVICE_STATE(Enum):
+    OFFLINE                 = 0
+    ONLINE                  = 1
+    MANUALLY_DISABLED       = 2
+    OFFLINE_LOWBAT          = 3
+    REMOVE_AND_READD        = 4
+    RESET_AND_READD         = 5
 
 class DEVICE_TYPE(Enum):
+    UNKNOWN                 = -1
     STATION                 = 0
     CAMERA                  = 1
     SENSOR                  = 2
@@ -74,7 +85,8 @@ class DEVICE_TYPE(Enum):
 
 class PARAM_TYPE(Enum):
     BATTERY_LEVEL                   = 1177 #Maybe?
-    DEVICE_UPGRADE_NOW      = 1134
+    DEVICE_UPGRADE_NOW              = 1134
+    DEVICE_RSSI                     = 1141
     
     OPEN_DEVICE                     = 2001
     NIGHT_VISUAL                    = 2002
@@ -124,6 +136,13 @@ class PARAM_TYPE(Enum):
     CAMERA_PIR                          = 1011
     CAMERA_WIFI_RSSI                    = 1142
     CAMERA_MOTION_ZONES                 = 1204
+
+    SENSOR_CONTACT_OPEN                 = 1550  # 0 - Close, 1 - Open
+    
+    MOTION_SENSOR_ENABLE_LED            = 1607
+    MOTION_SENSOR_LAST_EVENT_MS         = 1605
+    MOTION_SENSOR_PIR_SENSITIVITY       = 1609
+    TEST_1                              = 1608
 # 
 #     // Set only params?
 #     PUSH_MSG_MODE = 1252,                       // 0 to ???

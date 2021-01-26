@@ -1,7 +1,8 @@
-from uefiSecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST
+from uefiSecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST
 
 import logging, requests, json, copy
 from datetime import datetime, timedelta #, time as dtTime
+from uefiSecurityApi.model import Device
 # import time
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,6 +18,7 @@ class Api():
         self.headers = API_HEADERS
         self._LOGGER = logging.getLogger(__name__)
         self.devices = {}
+        self.stations = {}
         # self.headers['timezone'] = 
         #    dtTime(dtTime.fromisoformat(time.strptime(time.localtime(), '%HH:%MM'))) - dtTime(dtTime.fromisoformat(time.strptime(time.gmtime(), '%HH:%MM')))
     
@@ -64,8 +66,19 @@ class Api():
             return 'OK'
         pass
 
-    async def get_devices(self):
-        response = await self._request('POST', ENDPOINT_DEVICE_LIST, {}, self.headers)
+    async def update(self, device_sn=None):
+        if(device_sn is None):
+            await self.get_stations()
+            await self.get_devices()
+        else:
+            await self.get_devices(device_sn)
+
+
+    async def get_devices(self, device_sn=None):
+        data = {}
+        if(device_sn is not None):
+            data['device_sn'] = device_sn
+        response = await self._request('POST', ENDPOINT_DEVICE_LIST, data, self.headers)
         if(response.status_code != 200):
             self._LOGGER.error('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
             raise LoginException('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
@@ -76,8 +89,36 @@ class Api():
             self._LOGGER.error(message)
             raise ApiException(message)
         for device in dataresult['data']:
-            self.devices[device['device_sn']] = device
+            try:
+                deviceType = DEVICE_TYPE(device['device_type'])
+                if(device['device_sn'] not in self.devices):
+                    self.devices[device['device_sn']] = Device.fromType(self, deviceType)
+                    self.devices[device['device_sn']].init(device)
+                else:
+                    self.devices[device['device_sn']].update(device)
+            except Exception as e:
+                self._LOGGER.exception(e)
         return self.devices
+
+    async def get_stations(self):
+        response = await self._request('POST', ENDPOINT_STATION_LIST, {}, self.headers)
+        if(response.status_code != 200):
+            self._LOGGER.error('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+            raise LoginException('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+        dataresult = response.json()
+        self._LOGGER.debug('get_stations response: %s' % dataresult)
+        if(RESPONSE_ERROR_CODE(dataresult['code']) != RESPONSE_ERROR_CODE.WHATEVER_ERROR):
+            message = 'Unexpected API response code %s: %s' % (dataresult['code'], dataresult['msg'])
+            self._LOGGER.error(message)
+            raise ApiException(message)
+        for device in dataresult['data']:
+            try:
+                deviceType = DEVICE_TYPE(device['device_type'])
+                self.stations[device['station_sn']] = Device.fromType(self, deviceType)
+                self.stations[device['station_sn']].init(device)
+            except Exception as e:
+                self._LOGGER.exception(e)
+        return self.stations
 
     async def get_device(self, deviceId):
         pass

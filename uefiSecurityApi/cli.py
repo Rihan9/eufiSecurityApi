@@ -1,4 +1,4 @@
-import click, logging, asyncio
+import click, logging, asyncio, time
 from .api import Api
 
 _logger = logging.getLogger(__name__)
@@ -47,11 +47,28 @@ def session(ctx, token, domain, token_expire_at):
 @click.pass_context
 def devices(ctx):
     try:
-        asyncio.run(ctx.parent.obj.uefyApi.get_devices())
-        _logger.info(ctx.parent.obj.uefyApi.devices)
-    except:
-        pass
+        asyncio.run(ctx.parent.obj.uefyApi.update())
+        for deviceSn, device in ctx.parent.obj.uefyApi.devices.items():
+            click.echo(device)
+        for stationSn, station in ctx.parent.obj.uefyApi.stations.items():
+            click.echo(station)
+        # print(ctx.parent.obj.uefyApi.devices.values())
+    except Exception as e:
+        _logger.exception(e)
     pass
+
+@cli.command()
+@click.pass_context
+@click.option('--serial', prompt='eufy device serial id', default=None, required=False)
+def monitor(ctx, serial):
+    try:
+        for i in range(0,60):
+            asyncio.run(ctx.parent.obj.uefyApi.update(device_sn=serial))
+            time.sleep(1)
+    except Exception as e:
+        _logger.exception(e)
+    pass
+
 if __name__ == '__main__':
     #pylint: disable=no-value-for-parameter
     cli()
