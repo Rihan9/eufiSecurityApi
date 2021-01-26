@@ -1,25 +1,25 @@
 from uefiSecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST
 
 import logging, requests, json, copy
-from datetime import datetime #, time as dtTime
+from datetime import datetime, timedelta #, time as dtTime
 # import time
 
 _LOGGER = logging.getLogger(__name__)
 class Api():
-    def __init__(self, username, password, preferred2FAMethod=TWO_FACTOR_AUTH_METHODS.EMAIL):
+    def __init__(self, username=None, password=None, token=None, domain=API_BASE_URL, token_expire_at=None, preferred2FAMethod=TWO_FACTOR_AUTH_METHODS.EMAIL):
         self._username =username
         self._password = password
         self._preferred2FAMethod = preferred2FAMethod
-        self._token = None
-        self._tokenExpiration = None
+        self._token = token
+        self._tokenExpiration = None if token_expire_at is None else datetime.fromtimestamp(token_expire_at)
         self._refreshToken = None
-        self.domain = API_BASE_URL
+        self.domain = domain
         self.headers = API_HEADERS
         self._LOGGER = logging.getLogger(__name__)
         self.devices = {}
         # self.headers['timezone'] = 
         #    dtTime(dtTime.fromisoformat(time.strptime(time.localtime(), '%HH:%MM'))) - dtTime(dtTime.fromisoformat(time.strptime(time.gmtime(), '%HH:%MM')))
-
+    
     async def authenticate(self):
 
         if(self._token is None or self._tokenExpiration > datetime.now()):
@@ -123,15 +123,18 @@ class Api():
             call = requests.post
         else:
             raise ApiException('Unsupported operation: %s' % method)
+        url = self.base_url + url
         
-        # newHeaders = copy.copy(headers)
-        # if(url != ENDPOINT_LOGIN):
-        #     newHeaders['X-Auth-Token'] = self._token
+        newHeaders = copy.copy(headers)
+        if(url != ENDPOINT_LOGIN):
+            newHeaders['X-Auth-Token'] = self._token
         
         
+        self._LOGGER.debug('method: %s' % method)
+        self._LOGGER.debug('url: %s' % url)
         self._LOGGER.debug('data: %s' % data)
-        self._LOGGER.debug('headers: %s' % headers)
-        response = call(self.base_url + url, json=data, headers=headers)
+        self._LOGGER.debug('headers: %s' % newHeaders)
+        response = call(url, json=data, headers=newHeaders)
         return response
 
 
