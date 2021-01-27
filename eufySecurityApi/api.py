@@ -1,6 +1,6 @@
 from eufySecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST
 
-import logging, requests, json, copy
+import logging, requests, json, copy, asyncio
 from datetime import datetime, timedelta #, time as dtTime
 from eufySecurityApi.model import Device
 # import time
@@ -166,6 +166,7 @@ class Api():
     def domain(self):
         return self._domain
     async def _request(self, method, url, data, headers={}) -> requests.Response:
+        loop = asyncio.get_running_loop()
         call = None
         if(method == 'GET'):
             call = requests.get
@@ -184,7 +185,8 @@ class Api():
         self._LOGGER.debug('url: %s' % url)
         self._LOGGER.debug('data: %s' % data)
         self._LOGGER.debug('headers: %s' % newHeaders)
-        response = call(url, json=data, headers=newHeaders)
+        response = await loop.run_in_executor(None, call, url, json=data, headers=newHeaders)
+        #response = call(url, json=data, headers=newHeaders)
         return response
 
 
