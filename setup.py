@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="uefy-security-api-rihan", # Replace with your own username
-    version="0.0.1",
+    name="eufy-security-api-rihan", # Replace with your own username
+    version="0.0.3",
     author="Rihan",
     author_email="aleatza@gmail.com",
     description="Cover the http API for eufy security devices",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Rihan9/eufiSecurityApi",
+    url="https://github.com/Rihan9/eufySecurityApi",
     packages=setuptools.find_packages(),
     install_requires= ['requests', 'click', 'pytz', 'setuptools'],
     classifiers=[

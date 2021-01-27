@@ -1,4 +1,4 @@
-from eufiSecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
+from eufySecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
 import logging, traceback
 from datetime import datetime, timedelta
 
