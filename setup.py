@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="uefySecurityApi", # Replace with your own username
+    name="uefy-security-api-rihan", # Replace with your own username
     version="0.0.1",
     author="Rihan",
     author_email="aleatza@gmail.com",
@@ -13,10 +13,12 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Rihan9/eufiSecurityApi",
     packages=setuptools.find_packages(),
+    install_requires= ['requests', 'click', 'pytz', 'setuptools'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    license= 'MIT License'
 )
