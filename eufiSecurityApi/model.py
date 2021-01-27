@@ -1,5 +1,5 @@
 from eufiSecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
-import logging
+import logging, traceback
 from datetime import datetime, timedelta
 
 class Device(object):
@@ -20,6 +20,9 @@ class Device(object):
             return self.__dict__.get(key)
 
     def __setattr__(self, key, value):
+        frameStack = traceback.extract_stack(limit=2)[0]
+        if(not(frameStack.name in self.__dir__() and frameStack.filename == __file__)):
+            raise AttributeError('Device is read only')
         try:
             self._attribute[PARAM_TYPE(key)] = value
         except:
@@ -89,6 +92,10 @@ class Device(object):
             return Device.fromType(api, deviceType)
         pass
 
+    @property
+    def state(self):
+        return self.status.name.replace('_', ' ').lower()
+
 
 class Station(Device):
     deviceType= DEVICE_TYPE.STATION
@@ -115,3 +122,10 @@ class MotionSensor(Device):
     def motionDetected(self):
         lowerWindowLimit = datetime.now()-timedelta(milliseconds=MOTION_DETECTION_COOLDOWN_MS)
         return  lowerWindowLimit <= datetime.fromtimestamp(self.update_time)
+
+    @property
+    def state(self):
+        if(self.status == DEVICE_STATE.ONLINE):
+            return 'motion detected' if self.motionDetected() else 'no motion detected'
+        else:
+            return self.status.name.replace('_', ' ').lower()
