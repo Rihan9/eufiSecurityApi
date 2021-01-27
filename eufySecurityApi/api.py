@@ -14,7 +14,7 @@ class Api():
         self._token = token
         self._tokenExpiration = None if token_expire_at is None else datetime.fromtimestamp(token_expire_at)
         self._refreshToken = None
-        self.domain = domain
+        self._domain = domain
         self.headers = API_HEADERS
         self._LOGGER = logging.getLogger(__name__)
         self.devices = {}
@@ -38,11 +38,11 @@ class Api():
             if(RESPONSE_ERROR_CODE(dataresult['code']) == RESPONSE_ERROR_CODE.WHATEVER_ERROR):
                 self._token = dataresult['data']['auth_token']
                 self._tokenExpiration = datetime.fromtimestamp(dataresult['data']['token_expires_at'])
-                if('domain' in dataresult['data'] and dataresult['data']['domain'] != '' and dataresult['data']['domain'] != self.domain):
+                if('domain' in dataresult['data'] and dataresult['data']['domain'] != '' and dataresult['data']['domain'] != self._domain):
                     self._token = None
                     self._tokenExpiration = None
-                    self.domain = dataresult['data']['domain']
-                    self._LOGGER.info('Switching to new domain: %s', self.domain)
+                    self._domain = dataresult['data']['domain']
+                    self._LOGGER.info('Switching to new domain: %s', self._domain)
                     return await self.authenticate()
 
                 self._LOGGER.debug('Token: %s' %self._token)
@@ -153,9 +153,18 @@ class Api():
     
     @property
     def base_url(self):
-        return ('https://%s/v1' % self.domain)
+        return ('https://%s/v1' % self._domain)
 
+    @property 
+    def token(self):
+        return self._token
 
+    @property 
+    def token_expire_at(self):
+        return self._tokenExpiration.timestamp()
+    @property 
+    def domain(self):
+        return self._domain
     async def _request(self, method, url, data, headers={}) -> requests.Response:
         call = None
         if(method == 'GET'):
