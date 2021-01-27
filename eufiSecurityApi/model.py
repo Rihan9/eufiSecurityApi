@@ -126,6 +126,6 @@ class MotionSensor(Device):
     @property
     def state(self):
         if(self.status == DEVICE_STATE.ONLINE):
-            return 'motion detected' if self.motionDetected() else 'no motion detected'
+            return 'motion detected' if self.motionDetected else 'no motion detected'
         else:
             return self.status.name.replace('_', ' ').lower()
