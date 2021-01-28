@@ -19,9 +19,13 @@ class Api():
         self._LOGGER = logging.getLogger(__name__)
         self.devices = {}
         self.stations = {}
+        self._userId = None
         # self.headers['timezone'] = 
         #    dtTime(dtTime.fromisoformat(time.strptime(time.localtime(), '%HH:%MM'))) - dtTime(dtTime.fromisoformat(time.strptime(time.gmtime(), '%HH:%MM')))
     
+    @property
+    def userId(self):
+        return self._userId
     async def authenticate(self):
         if(self._token is None or self._tokenExpiration > datetime.now()):
             response = await self._request('POST', ENDPOINT_LOGIN, {
@@ -46,12 +50,14 @@ class Api():
 
                 self._LOGGER.debug('Token: %s' %self._token)
                 self._LOGGER.debug('Token expire at: %s' % self._tokenExpiration)
+                self._userId = dataresult['data']['user_id']
                 return 'OK'
             elif(RESPONSE_ERROR_CODE(dataresult['code']) == RESPONSE_ERROR_CODE.NEED_VERIFY_CODE):
                 self._LOGGER.info('need two factor authentication. Send verification code...')
                 #dataresult['data']
                 self._token = dataresult['data']['auth_token']
                 self._tokenExpiration = datetime.fromtimestamp(dataresult['data']['token_expires_at'])
+                self._userId = dataresult['data']['user_id']
                 self._LOGGER.debug('Token: %s' %self._token)
                 self._LOGGER.debug('Token expire at: %s' % self._tokenExpiration)
 
