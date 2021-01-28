@@ -1,6 +1,13 @@
 from eufySecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
-import logging, traceback
+import logging, traceback, asyncio
 from datetime import datetime, timedelta
+from eufySecurityApi.utils import getUniqueId
+
+class callbackStruct(object):
+    def __init__(self, cId, attributes, callback):
+        self.cId = cId
+        self.attributes = attributes
+        self.call = callback
 
 class Device(object):
     deviceType= DEVICE_TYPE(-1)
@@ -47,6 +54,7 @@ class Device(object):
         self.model = apiDict['device_model']
         self.status = DEVICE_STATE(apiDict['status'])
         self._type = DEVICE_TYPE(apiDict['device_type'])
+        self._callbacks = {}
         for attribute in apiDict['params']:
             try:
                 self._attribute[PARAM_TYPE(attribute['param_type'])] = attribute['param_value']
@@ -57,20 +65,39 @@ class Device(object):
         for key in apiDict.keys():
             if key not in ['station_conn', 'member', 'permission', 'params']:
                 self.__dict__[key] = apiDict[key]
+            try:
+                self._attribute[PARAM_TYPE(key)] = apiDict[key]
+            except:
+                pass
         # self.deviceType = DEVICE_TYPE(apiDict['device_type'])
     
     def update(self, apiDict):
+        updatedAttributes = []
         for key in apiDict.keys():
             if key not in ['station_conn', 'member', 'permission', 'params']:
                 if(key in self.__dict__ and self.__dict__[key] != apiDict[key]):
                     self._logger.info('%s updated %s: %s -> %s' %(self.name, key, self.__dict__[key], apiDict[key]))
                     self.__dict__[key] = apiDict[key]
+                try:
+                    if(PARAM_TYPE(key) in self._attribute and self._attribute[PARAM_TYPE(key)] != apiDict[key]):
+                        self._logger.info('%s updated %s: %s -> %s' %(self.name, PARAM_TYPE(key), self._attribute[PARAM_TYPE(key)], apiDict[key]))
+                        updatedAttributes.append((PARAM_TYPE(key), self._attribute[PARAM_TYPE(key)], apiDict[key]))
+                        self._attribute[PARAM_TYPE(key)] = apiDict[key]
+                    elif(PARAM_TYPE(key) not in self._attribute):
+                        self._logger.info('%s new attribute %s: %s -> %s' %(self.name, PARAM_TYPE(key), self._attribute[PARAM_TYPE(key)], apiDict[key]))
+                        updatedAttributes.append((PARAM_TYPE(key), self._attribute[PARAM_TYPE(key)], apiDict[key]))
+                        self._attribute[PARAM_TYPE(key)] = apiDict[key]
+                except:
+                    pass
+                
         for attribute in apiDict['params']:
             try:
                 if(PARAM_TYPE(attribute['param_type']) in self._attribute and self._attribute[PARAM_TYPE(attribute['param_type'])] != attribute['param_value']):
+                    updatedAttributes.append((PARAM_TYPE(attribute['param_type']), self._attribute[PARAM_TYPE(attribute['param_type'])], attribute['param_value']))
                     self._logger.info('%s updated %s: %s -> %s' %(self.name, PARAM_TYPE(attribute['param_type']), self._attribute[PARAM_TYPE(attribute['param_type'])], attribute['param_value']))
                     self._attribute[PARAM_TYPE(attribute['param_type'])] = attribute['param_value']
                 elif(PARAM_TYPE(attribute['param_type']) not in self._attribute):
+                    updatedAttributes.append((PARAM_TYPE(attribute['param_type']), self._attribute[PARAM_TYPE(attribute['param_type'])], attribute['param_value']))
                     self._attribute[PARAM_TYPE(attribute['param_type'])] = attribute['param_value']
                     self._logger.info('%s new attribute %s: %s' % (self.name, PARAM_TYPE(attribute['param_type']), attribute['param_value']))
             except:
@@ -80,7 +107,28 @@ class Device(object):
                 elif(attribute['param_type'] not in self._notRecognizedAttribute):
                     self._notRecognizedAttribute[attribute['param_type']] = attribute['param_value']
                     self._logger.info('%s new attribute %s: %s' % (self.name, attribute['param_type'], attribute['param_value']))
-# 
+
+        if(len(updatedAttributes) > 0):
+            self._call(updatedAttributes)
+    
+    def _call(self, updatedAttributes):
+        for cId in self._callbacks:
+            data = []
+            for attributeTuple in updatedAttributes:
+                if (attributeTuple[0] in self._callbacks[cId].attributes or len(self._callbacks[cId].attributes) == 0):
+                    data.append(attributeTuple)
+            if(len(data) > 0):
+                asyncio.create_task(self._callbacks[cId].call(data))
+        pass
+    
+    def subscribe(self, attributes: [PARAM_TYPE], callback):
+        cId = getUniqueId(callback)
+        if(cId in self._callbacks):
+            self._callbacks[cId].attributes = list(set(self._callbacks[cId].attributes + attributes))
+        else:
+            self._callbacks[cId] = callbackStruct(cId, attributes, callback)
+        return 'OK'
+    
     @classmethod
     def fromType(cls, api, deviceType: DEVICE_TYPE):
         if cls.__name__ == 'Device':
@@ -95,6 +143,48 @@ class Device(object):
     @property
     def state(self):
         return self.status.name.replace('_', ' ').lower()
+
+    @property
+    def hasbattery(self):
+        return PARAM_TYPE.BATTERY_LEVEL in self._attribute
+
+    @property
+    def battery_level(self):
+        return self._attribute[PARAM_TYPE.BATTERY_LEVEL] if self.hasbattery else None
+    
+    @property
+    def isCamera(self):
+        return self._type in [
+            DEVICE_TYPE.CAMERA_E,
+            DEVICE_TYPE.CAMERA,
+            DEVICE_TYPE.CAMERA2_PRO,
+            DEVICE_TYPE.CAMERA2C_PRO,
+            DEVICE_TYPE.CAMERA2C,
+            DEVICE_TYPE.CAMERA2,
+            DEVICE_TYPE.INDOOR_CAMERA_1080,
+            DEVICE_TYPE.INDOOR_PT_CAMERA_1080,
+            DEVICE_TYPE.SOLO_CAMERA_PRO,
+            DEVICE_TYPE.SOLO_CAMERA,
+            DEVICE_TYPE.DOORBELL,
+            DEVICE_TYPE.BATTERY_DOORBELL,
+            DEVICE_TYPE.BATTERY_DOORBELL_2,
+            DEVICE_TYPE.FLOODLIGHT
+        ]
+    
+    @property
+    def isMotionSensor(self):
+        return self._type in [
+            DEVICE_TYPE.MOTION_SENSOR
+        ] or self.isCamera
+    
+    @property
+    def isDoorLock(self):
+        return self._type in [
+            DEVICE_TYPE.LOCK_BASIC,
+            DEVICE_TYPE.LOCK_ADVANCED,
+            DEVICE_TYPE.LOCK_BASIC_NO_FINGER,
+            DEVICE_TYPE.LOCK_ADVANCED_NO_FINGER
+        ]
 
 
 class Station(Device):

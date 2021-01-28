@@ -84,7 +84,16 @@ class DEVICE_TYPE(Enum):
     LOCK_ADVANCED_NO_FINGER = 53
 
 class PARAM_TYPE(Enum):
-    BATTERY_LEVEL                   = 1177 #Maybe?
+    #
+    PROP_EVENT_NUM          = 'event_num'
+    PROP_UPDATE_TIME        = 'update_time'
+    PROP_MAIN_SW_VERSION    = 'main_sw_version'
+    PROP_MAIN_HW_VERSION    = 'main_hw_version'
+    PROP_SEC_SW_VERSION     = 'sec_sw_version'
+    PROP_SEC_HW_VERSION     = 'sec_hw_version'
+    PROP_STATUS             = 'status'
+    #
+    BATTERY_LEVEL                   = 1101 #Maybe? 1177
     DEVICE_UPGRADE_NOW              = 1134
     DEVICE_RSSI                     = 1141
     

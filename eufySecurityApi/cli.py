@@ -1,11 +1,19 @@
 import click, logging, asyncio, time
 from .api import Api
+import asyncio
 
 _logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(name)-10s %(levelname)-8s %(message)s')
 
 uefyApi = None
 
+
+#pylint: disable=no-value-for-parameter
+try:
+    loop = asyncio.get_running_loop()
+except:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
 class MyContext(click.Context):
     def __init__(self):
@@ -64,14 +72,23 @@ def devices(ctx):
 @click.pass_context
 @click.option('--serial', prompt='eufy device serial id', default=None, required=False)
 def monitor(ctx, serial):
-    try:
-        for i in range(0,60):
-            asyncio.run(ctx.parent.obj.uefyApi.update(device_sn=serial))
-            time.sleep(1)
-    except Exception as e:
-        _logger.exception(e)
-    pass
+    asyncio.run(ctx.parent.obj.uefyApi.update(device_sn=serial))
+    async def update_print(attributes):
+        for attribute in attributes:
+            # _logger.debug(attribute)
+            click.echo('updated: %s, from \'%s\' to \'%s\'' % attribute)
+    if(serial in ctx.parent.obj.uefyApi.devices):
+        ctx.parent.obj.uefyApi.devices[serial].subscribe([], update_print)
+        try:
+            for i in range(0,60*5):
+                asyncio.run(ctx.parent.obj.uefyApi.update(device_sn=serial))
+                time.sleep(1)
+        except Exception as e:
+            _logger.exception(e)
+    else:
+        click.echo('unknown serial: %s' % serial)
 
 if __name__ == '__main__':
-    #pylint: disable=no-value-for-parameter
     cli()
+    loop.run_until_complete()
+    loop.close()

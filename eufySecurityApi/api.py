@@ -1,6 +1,6 @@
 from eufySecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST
 
-import logging, requests, json, copy, asyncio
+import logging, json, copy, functools, requests, asyncio
 from datetime import datetime, timedelta #, time as dtTime
 from eufySecurityApi.model import Device
 # import time
@@ -23,7 +23,6 @@ class Api():
         #    dtTime(dtTime.fromisoformat(time.strptime(time.localtime(), '%HH:%MM'))) - dtTime(dtTime.fromisoformat(time.strptime(time.gmtime(), '%HH:%MM')))
     
     async def authenticate(self):
-
         if(self._token is None or self._tokenExpiration > datetime.now()):
             response = await self._request('POST', ENDPOINT_LOGIN, {
                 'email': self._username,
@@ -166,7 +165,11 @@ class Api():
     def domain(self):
         return self._domain
     async def _request(self, method, url, data, headers={}) -> requests.Response:
-        loop = asyncio.get_running_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         call = None
         if(method == 'GET'):
             call = requests.get
@@ -185,7 +188,7 @@ class Api():
         self._LOGGER.debug('url: %s' % url)
         self._LOGGER.debug('data: %s' % data)
         self._LOGGER.debug('headers: %s' % newHeaders)
-        response = await loop.run_in_executor(None, call, url, json=data, headers=newHeaders)
+        response = await loop.run_in_executor(None, functools.partial(call, url, json=data, headers=newHeaders))
         #response = call(url, json=data, headers=newHeaders)
         return response
 
