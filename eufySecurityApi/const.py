@@ -92,6 +92,7 @@ class PARAM_TYPE(Enum):
     PROP_SEC_SW_VERSION     = 'sec_sw_version'
     PROP_SEC_HW_VERSION     = 'sec_hw_version'
     PROP_STATUS             = 'status'
+    PROP_WIFI_MAC             = 'wifi_mac'
     #
     BATTERY_LEVEL                   = 1101 #Maybe? 1177
     DEVICE_UPGRADE_NOW              = 1134

@@ -6,7 +6,12 @@
         {
             "label": "Build",
             "type": "shell",
-            "command": "script/Build.bat"
+            "command": "script/Build.bat",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "Dist",
