@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from eufySecurityApi.utils import getUniqueId
 
 class AttributeWrapper(dict):
+
     def __init__(self):
         self._internalDict = {}
     def __setitem__(self, key, value):
@@ -32,6 +33,10 @@ class AttributeWrapper(dict):
 
     def __getattr__(self, key):
         raise KeyError('Unhautorized')
+
+    def __contains__(self, key):
+        return key in self._internalDict
+
 
 class callbackStruct(object):
     def __init__(self, cId, attributes, callback):
