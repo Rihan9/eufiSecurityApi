@@ -3,6 +3,36 @@ import logging, traceback, asyncio
 from datetime import datetime, timedelta
 from eufySecurityApi.utils import getUniqueId
 
+class AttributeWrapper(dict):
+    def __init__(self):
+        self._internalDict = {}
+    def __setitem__(self, key, value):
+        if(not isinstance(key, PARAM_TYPE)):
+            try:
+                key = PARAM_TYPE(key)
+            except:
+               raise AttributeError('Key is not a PARAM_TYPE value') 
+        frameStack = traceback.extract_stack(limit=2)[0]
+        if(not(frameStack.name in self.__dir__() and frameStack.filename == __file__)):
+            raise AttributeError('Attribute is read only')
+        self._internalDict[key] = value
+
+    def __getitem__(self, key):
+        if(isinstance(key, PARAM_TYPE)):
+            return self._internalDict[key]
+        else:
+            return self._internalDict[PARAM_TYPE(key)]
+
+    def __setattr__(self, key, value):
+        frameStack = traceback.extract_stack(limit=2)[0]
+        if(not(frameStack.name in self.__dir__() and frameStack.filename == __file__)):
+            raise AttributeError('Attribute is read only')
+        else:
+            self.__dict__[key] = value
+
+    def __getattr__(self, key):
+        raise KeyError('Unhautorized')
+
 class callbackStruct(object):
     def __init__(self, cId, attributes, callback):
         self.cId = cId
@@ -10,22 +40,15 @@ class callbackStruct(object):
         self.call = callback
 
 class Device(object):
+
     deviceType= DEVICE_TYPE(-1)
     def __init__(self, api):
         self.api = api
         self._logger  = logging.getLogger(__name__)
-        self._attribute = {}
+        # self._attribute = {}
         self._notRecognizedAttribute = {}
+        self._attribute = AttributeWrapper()
     
-    def __getattr__(self, key):
-        try:
-            data = self._attribute.get(PARAM_TYPE[key], None)
-            if(data is None):
-                raise Exception('no data')
-            return data
-        except:
-            return self.__dict__.get(key)
-
     def __setattr__(self, key, value):
         frameStack = traceback.extract_stack(limit=2)[0]
         if(not(frameStack.name in self.__dir__() and frameStack.filename == __file__)):
@@ -141,8 +164,12 @@ class Device(object):
         pass
 
     @property
+    def attribute(self):
+        return self._attribute
+
+    @property
     def state(self):
-        return self.status.name.replace('_', ' ').lower()
+        return self._attribute[PARAM_TYPE.PROP_STATUS].name.replace('_', ' ').lower()
 
     @property
     def hasbattery(self):
@@ -218,11 +245,11 @@ class MotionSensor(Device):
     @property
     def motionDetected(self):
         lowerWindowLimit = datetime.now()-timedelta(milliseconds=MOTION_DETECTION_COOLDOWN_MS)
-        return  lowerWindowLimit <= datetime.fromtimestamp(self.update_time)
+        return  lowerWindowLimit <= datetime.fromtimestamp(self._attribute[PARAM_TYPE.PROP_UPDATE_TIME])
 
     @property
     def state(self):
         if(self.status == DEVICE_STATE.ONLINE):
             return 'motion detected' if self.motionDetected else 'no motion detected'
         else:
-            return self.status.name.replace('_', ' ').lower()
+            return self._attribute[PARAM_TYPE.PROP_STATUS].name.replace('_', ' ').lower()
