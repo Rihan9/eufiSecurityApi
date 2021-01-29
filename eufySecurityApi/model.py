@@ -158,6 +158,14 @@ class Device(object):
         else:
             self._callbacks[cId] = callbackStruct(cId, attributes, callback)
         return 'OK'
+
+    def unsubscribe(self, callback):
+        cId = getUniqueId(callback)
+        if(cId in self._callbacks):
+            del self._callbacks[cId]
+            return 'OK'
+        else:
+            return 'KO'
     
     @classmethod
     def fromType(cls, api, deviceType: DEVICE_TYPE):
