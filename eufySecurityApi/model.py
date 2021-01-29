@@ -96,7 +96,7 @@ class Device(object):
                     apiDict[key] = new_mac[:-1]
                 try:
                     self._attribute[PARAM_TYPE(key)] = apiDict[key]
-                except Exception as e:
+                except:
                     self.__dict__[key] = apiDict[key]
                     pass
         # self.deviceType = DEVICE_TYPE(apiDict['device_type'])
@@ -163,7 +163,7 @@ class Device(object):
     def fromType(cls, api, deviceType: DEVICE_TYPE):
         if cls.__name__ == 'Device':
             for subclass in cls.__subclasses__():
-                if subclass.deviceType == deviceType:
+                if deviceType in subclass.deviceType:
                     return subclass(api)
             return Device(api)
         else:
@@ -225,7 +225,7 @@ class Device(object):
 
 
 class Station(Device):
-    deviceType= DEVICE_TYPE.STATION
+    deviceType= [DEVICE_TYPE.STATION]
 
     def init(self, apiDict):
         self.serial = apiDict['station_sn']
@@ -250,8 +250,31 @@ class Station(Device):
 
 
 class MotionSensor(Device):
-    deviceType = DEVICE_TYPE.MOTION_SENSOR
+    deviceType = [DEVICE_TYPE.MOTION_SENSOR]
 
+    @property
+    def motionDetected(self):
+        lowerWindowLimit = datetime.now()-timedelta(milliseconds=MOTION_DETECTION_COOLDOWN_MS)
+        return  lowerWindowLimit <= datetime.fromtimestamp(self._attribute[PARAM_TYPE.PROP_UPDATE_TIME])
+
+class GenericCamera(Device):
+    deviceType = [
+        DEVICE_TYPE.CAMERA_E,
+        DEVICE_TYPE.CAMERA,
+        DEVICE_TYPE.CAMERA2_PRO,
+        DEVICE_TYPE.CAMERA2C_PRO,
+        DEVICE_TYPE.CAMERA2C,
+        DEVICE_TYPE.CAMERA2,
+        DEVICE_TYPE.INDOOR_CAMERA_1080,
+        DEVICE_TYPE.INDOOR_PT_CAMERA_1080,
+        DEVICE_TYPE.SOLO_CAMERA_PRO,
+        DEVICE_TYPE.SOLO_CAMERA,
+        DEVICE_TYPE.DOORBELL,
+        DEVICE_TYPE.BATTERY_DOORBELL,
+        DEVICE_TYPE.BATTERY_DOORBELL_2,
+        DEVICE_TYPE.FLOODLIGHT
+    ]
+    
     @property
     def motionDetected(self):
         lowerWindowLimit = datetime.now()-timedelta(milliseconds=MOTION_DETECTION_COOLDOWN_MS)
