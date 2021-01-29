@@ -87,12 +87,12 @@ class PARAM_TYPE(Enum):
     #
     PROP_EVENT_NUM          = 'event_num'
     PROP_UPDATE_TIME        = 'update_time'
-    PROP_MAIN_SW_VERSION    = 'main_sw_version'
-    PROP_MAIN_HW_VERSION    = 'main_hw_version'
-    PROP_SEC_SW_VERSION     = 'sec_sw_version'
-    PROP_SEC_HW_VERSION     = 'sec_hw_version'
+    # PROP_MAIN_SW_VERSION    = 'main_sw_version'
+    # PROP_MAIN_HW_VERSION    = 'main_hw_version'
+    # PROP_SEC_SW_VERSION     = 'sec_sw_version'
+    # PROP_SEC_HW_VERSION     = 'sec_hw_version'
+    # PROP_WIFI_MAC             = 'wifi_mac'
     PROP_STATUS             = 'status'
-    PROP_WIFI_MAC             = 'wifi_mac'
     #
     BATTERY_LEVEL                   = 1101 #Maybe? 1177
     DEVICE_UPGRADE_NOW              = 1134

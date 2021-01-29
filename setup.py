@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="eufy-security-api-rihan", # Replace with your own username
-    version="0.0.10",
+    version="0.0.11",
     author="Rihan",
     author_email="aleatza@gmail.com",
     description="Cover the http API for eufy security devices",

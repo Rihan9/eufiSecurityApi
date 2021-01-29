@@ -13,7 +13,7 @@ class AttributeWrapper(dict):
             except:
                raise AttributeError('Key is not a PARAM_TYPE value') 
         frameStack = traceback.extract_stack(limit=2)[0]
-        if(not(frameStack.name in self.__dir__() and frameStack.filename == __file__)):
+        if(not(frameStack.filename == __file__)):
             raise AttributeError('Attribute is read only')
         self._internalDict[key] = value
 
@@ -51,12 +51,9 @@ class Device(object):
     
     def __setattr__(self, key, value):
         frameStack = traceback.extract_stack(limit=2)[0]
-        if(not(frameStack.name in self.__dir__() and frameStack.filename == __file__)):
+        if(not(frameStack.filename == __file__)):
             raise AttributeError('Device is read only')
-        try:
-            self._attribute[PARAM_TYPE(key)] = value
-        except:
-            self.__dict__[key] = value
+        self.__dict__[key] = value
 
     def __str__(self):
         output = ''
@@ -87,9 +84,14 @@ class Device(object):
         
         for key in apiDict.keys():
             if key not in EXCLUDED_ROOT_PROPERTY:
+                if(key == 'wifi_mac' and ':' not in apiDict[key]):
+                    new_mac = ''
+                    for i in range(0,len(apiDict[key]),2):
+                        new_mac += apiDict[key][i:i+2] + ':'
+                    apiDict[key] = new_mac[:-1]
                 try:
                     self._attribute[PARAM_TYPE(key)] = apiDict[key]
-                except:
+                except Exception as e:
                     self.__dict__[key] = apiDict[key]
                     pass
         # self.deviceType = DEVICE_TYPE(apiDict['device_type'])
