@@ -176,7 +176,10 @@ class Device(object):
 
     @property
     def state(self):
-        return self._attribute[PARAM_TYPE.PROP_STATUS].name.replace('_', ' ').lower()
+        if(PARAM_TYPE.PROP_STATUS in self._attribute):
+            return self._attribute[PARAM_TYPE.PROP_STATUS].name.replace('_', ' ').lower()
+        else:
+            return self.status.name.replace('_', ' ').lower()
 
     @property
     def hasbattery(self):
@@ -253,10 +256,3 @@ class MotionSensor(Device):
     def motionDetected(self):
         lowerWindowLimit = datetime.now()-timedelta(milliseconds=MOTION_DETECTION_COOLDOWN_MS)
         return  lowerWindowLimit <= datetime.fromtimestamp(self._attribute[PARAM_TYPE.PROP_UPDATE_TIME])
-
-    @property
-    def state(self):
-        if(self.status == DEVICE_STATE.ONLINE):
-            return 'motion detected' if self.motionDetected else 'no motion detected'
-        else:
-            return self._attribute[PARAM_TYPE.PROP_STATUS].name.replace('_', ' ').lower()
