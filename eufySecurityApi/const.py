@@ -157,3 +157,6 @@ class PARAM_TYPE(Enum):
 #     PUSH_MSG_MODE = 1252,                       // 0 to ???
 # }
 # 
+
+
+EXCLUDED_ROOT_PROPERTY = ['station_conn', 'member', 'permission', 'params', 'status']

@@ -1,4 +1,4 @@
-from eufySecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS
+from eufySecurityApi.const import PARAM_TYPE, DEVICE_TYPE, DEVICE_STATE, MOTION_DETECTION_COOLDOWN_MS, EXCLUDED_ROOT_PROPERTY
 import logging, traceback, asyncio
 from datetime import datetime, timedelta
 from eufySecurityApi.utils import getUniqueId
@@ -19,7 +19,7 @@ class Device(object):
     
     def __getattr__(self, key):
         try:
-            data = self._attribute.get(PARAM_TYPE(key), None)
+            data = self._attribute.get(PARAM_TYPE[key], None)
             if(data is None):
                 raise Exception('no data')
             return data
@@ -63,18 +63,18 @@ class Device(object):
                 self._logger.debug('%s: attribute type \'%s\' is not recognized: %s' % (self.model, attribute['param_type'], attribute['param_value']))
         
         for key in apiDict.keys():
-            if key not in ['station_conn', 'member', 'permission', 'params']:
-                self.__dict__[key] = apiDict[key]
-            try:
-                self._attribute[PARAM_TYPE(key)] = apiDict[key]
-            except:
-                pass
+            if key not in EXCLUDED_ROOT_PROPERTY:
+                try:
+                    self._attribute[PARAM_TYPE(key)] = apiDict[key]
+                except:
+                    self.__dict__[key] = apiDict[key]
+                    pass
         # self.deviceType = DEVICE_TYPE(apiDict['device_type'])
     
     def update(self, apiDict):
         updatedAttributes = []
         for key in apiDict.keys():
-            if key not in ['station_conn', 'member', 'permission', 'params']:
+            if key not in EXCLUDED_ROOT_PROPERTY:
                 if(key in self.__dict__ and self.__dict__[key] != apiDict[key]):
                     self._logger.info('%s updated %s: %s -> %s' %(self.name, key, self.__dict__[key], apiDict[key]))
                     self.__dict__[key] = apiDict[key]
@@ -201,7 +201,14 @@ class Station(Device):
                 self._attribute[PARAM_TYPE(attribute['param_type'])] = attribute['param_value']
             except:
                 self._notRecognizedAttribute[attribute['param_type']] = attribute['param_value']
-                self._logger.debug('%s: attribute type \'%s\' is not recognized: %s' % (self.model, attribute['param_type'], attribute['param_value']))
+                self._logger.debug('%s: attribute type \'%s\' is not recognized: %s' % (self.model, attribute['param_type'], attribute['param_value']))        
+        for key in apiDict.keys():
+            if key not in EXCLUDED_ROOT_PROPERTY:
+                try:
+                    self._attribute[PARAM_TYPE(key)] = apiDict[key]
+                except:
+                    self.__dict__[key] = apiDict[key]
+                    pass
         # self.deviceType = DEVICE_TYPE(apiDict['device_type'])
 
 
