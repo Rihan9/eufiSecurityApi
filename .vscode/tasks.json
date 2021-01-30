@@ -16,7 +16,8 @@
         {
             "label": "Dist",
             "type": "shell",
-            "command": "script/Dist.bat"
+            "command": "script/Dist.bat",
+            "problemMatcher": []
         }
     ]
 }

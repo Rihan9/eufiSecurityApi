@@ -152,12 +152,21 @@ class PARAM_TYPE(Enum):
     MOTION_SENSOR_ENABLE_LED            = 1607
     MOTION_SENSOR_LAST_EVENT_MS         = 1605
     MOTION_SENSOR_PIR_SENSITIVITY       = 1609
-    TEST_1                              = 1608
 # 
 #     // Set only params?
 #     PUSH_MSG_MODE = 1252,                       // 0 to ???
 # }
 # 
 
+class GUARD_MODE(Enum):
+    AWAY        = '0'
+    HOME        = '1'
+    DISARMED    = '63'
+    SCHEDULED   = '2'
+    GEOLOCATION = '47'
+    CUSTOM1     = '3'
+    CUSTOM2     = '4'
+    CUSTOM3     = '5'
+    OFF         = '6'
 
 EXCLUDED_ROOT_PROPERTY = ['station_conn', 'member', 'permission', 'params', 'status']

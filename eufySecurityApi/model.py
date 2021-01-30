@@ -36,6 +36,9 @@ class AttributeWrapper(dict):
 
     def __contains__(self, key):
         return key in self._internalDict
+    
+    def __iter__(self): 
+        return self._internalDict.__iter__()
 
 
 class callbackStruct(object):
