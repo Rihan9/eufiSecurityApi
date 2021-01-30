@@ -154,7 +154,7 @@ class Api():
 
     @property
     def connected(self):
-        return self._token != None
+        return self._token != None and self._tokenExpiration > datetime.now()
     
     @property
     def base_url(self):
