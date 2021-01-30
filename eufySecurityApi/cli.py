@@ -1,5 +1,6 @@
 import click, logging, asyncio, time
 from .api import Api
+from .const import TWO_FACTOR_AUTH_METHODS
 import asyncio
 
 _logger = logging.getLogger(__name__)
@@ -36,13 +37,24 @@ def cli(ctx, debug):
 @click.option('--tfa', prompt='preferred two factor authentication method (EMAIL, SMS, PUSH)', default='EMAIL')
 def login(ctx, username, password, tfa):
     _logger.debug('Username: %s, Password: %s, tfa: %s' % (username, password, tfa))
-    ctx.parent.obj.uefyApi = Api(username=username, password=password)
     try:
-        asyncio.run(ctx.parent.obj.uefyApi.authenticate())
-        click.echo('Token: %s' % ctx.parent.obj.uefyApi.token)
-        click.echo('Token_expire: %s' % ctx.parent.obj.uefyApi.token_expire_at)
-        click.echo('Domain: %s' % ctx.parent.obj.uefyApi.domain)
-    except:
+        ctx.parent.obj.uefyApi = Api(username=username, password=password, preferred2FAMethod=TWO_FACTOR_AUTH_METHODS[tfa])
+        response = asyncio.run(ctx.parent.obj.uefyApi.authenticate())
+        click.echo('Response: %s' % response)
+        if(response == 'OK'):
+            click.echo('Token: %s' % ctx.parent.obj.uefyApi.token)
+            click.echo('Token_expire: %s' % ctx.parent.obj.uefyApi.token_expire_at)
+            click.echo('Domain: %s' % ctx.parent.obj.uefyApi.domain)
+        elif(response == 'send_verify_code'):
+            verificationCode = click.prompt('Enter verification code: %s')
+            response = asyncio.run(ctx.parent.obj.uefyApi.sendVerifyCode(verificationCode))
+            click.echo('Response: %s' % response)
+            if(response == 'OK'):
+                click.echo('Token: %s' % ctx.parent.obj.uefyApi.token)
+                click.echo('Token_expire: %s' % ctx.parent.obj.uefyApi.token_expire_at)
+                click.echo('Domain: %s' % ctx.parent.obj.uefyApi.domain)
+    except Exception as e:
+        _logger.exception(e)
         pass
     pass
 

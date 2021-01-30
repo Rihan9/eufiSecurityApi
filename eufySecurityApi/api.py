@@ -1,4 +1,8 @@
-from eufySecurityApi.const import TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST
+from eufySecurityApi.const import (
+    TWO_FACTOR_AUTH_METHODS, API_BASE_URL, API_HEADERS, RESPONSE_ERROR_CODE, 
+    ENDPOINT_LOGIN,ENDPOINT_DEVICE_LIST, DEVICE_TYPE, ENDPOINT_STATION_LIST, ENDPOINT_REQUEST_VERIFY_CODE,
+    ENDPOINT_TRUST_DEVICE_LIST, ENDPOINT_TRUST_DEVICE_ADD
+)
 
 import logging, json, copy, functools, requests, asyncio
 from datetime import datetime, timedelta #, time as dtTime
@@ -61,7 +65,7 @@ class Api():
                 self._LOGGER.debug('Token: %s' %self._token)
                 self._LOGGER.debug('Token expire at: %s' % self._tokenExpiration)
 
-                await self.send_verify_code()
+                await self.requestVerifyCode()
                 return "send_verify_code"
             else:
                 message = 'Unexpected API response code %s: %s (%s)' % (dataresult['code'], dataresult['msg'], response.request.url)
@@ -137,20 +141,69 @@ class Api():
         self._tokenExpiration = None
         pass
 
-    async def send_verify_code(self):
-        response = await self._request('POST', 'sms/send/verify_code', {
-            'message_type': self._preferred2FAMethod
+    async def requestVerifyCode(self):
+        response = await self._request('POST', ENDPOINT_REQUEST_VERIFY_CODE, {
+            'message_type': self._preferred2FAMethod.value
         }, self.headers)
         if(response.status_code != 200):
-            self._LOGGER.error('Unexpected response code: %s, on url: %s' % response.status_code, response.request.url)
-            raise ApiException('Unexpected response code: %s, on url: %s' % response.status_code, response.request.url)
+            self._LOGGER.error('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+            raise ApiException('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
         dataresult = response.json()
-        self._LOGGER.debug('login response: %s' % dataresult)
+        self._LOGGER.debug('request verify code response: %s' % dataresult)
         if(RESPONSE_ERROR_CODE(dataresult['code']) != RESPONSE_ERROR_CODE.WHATEVER_ERROR):
             message = 'Unexpected API response code %s: %s' % (dataresult['code'], dataresult['msg'])
             self._LOGGER.error(message)
             raise ApiException(message)
         return 'OK'
+
+    async def sendVerifyCode(self, verifyCode):
+        # check verify code #
+        response = await self._request('POST', ENDPOINT_LOGIN, {
+            'verify_code': verifyCode,
+            'transaction': datetime.now().timestamp()
+        }, self.headers)
+        if(response.status_code != 200):
+            self._LOGGER.error('Unexpected response code: %s, on url: %s' % response.status_code, response.request.url)
+            raise ApiException('Unexpected response code: %s, on url: %s' % response.status_code, response.request.url)
+        dataresult = response.json()
+        self._LOGGER.debug('send verify code response: %s' % dataresult)
+        if(RESPONSE_ERROR_CODE(dataresult['code']) != RESPONSE_ERROR_CODE.WHATEVER_ERROR):
+            message = 'Unexpected API response code %s: %s' % (dataresult['code'], dataresult['msg'])
+            self._LOGGER.error(message)
+            raise ApiException(message)
+        
+        # if ok, add this device to trust device list #
+        response = await self._request('POST', ENDPOINT_TRUST_DEVICE_ADD, {
+            'verify_code': verifyCode,
+            'transaction': datetime.now().timestamp()
+        }, self.headers)
+        if(response.status_code != 200):
+            self._LOGGER.error('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+            raise ApiException('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+        dataresult = response.json()
+        self._LOGGER.debug('add trust device response: %s' % dataresult)
+        if(RESPONSE_ERROR_CODE(dataresult['code']) != RESPONSE_ERROR_CODE.WHATEVER_ERROR):
+            message = 'Unexpected API response code %s: %s' % (dataresult['code'], dataresult['msg'])
+            self._LOGGER.error(message)
+            raise ApiException(message)
+
+        response = await self._request('GET', ENDPOINT_TRUST_DEVICE_LIST, None, self.headers)
+        if(response.status_code != 200):
+            self._LOGGER.error('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+            raise ApiException('Unexpected response code: %s, on url: %s' % (response.status_code, response.request.url))
+        dataresult = response.json()
+        self._LOGGER.debug('add trust device response: %s' % dataresult)
+        if(RESPONSE_ERROR_CODE(dataresult['code']) != RESPONSE_ERROR_CODE.WHATEVER_ERROR):
+            message = 'Unexpected API response code %s: %s' % (dataresult['code'], dataresult['msg'])
+            self._LOGGER.error(message)
+            raise ApiException(message)
+        isTrusted = False
+        for trusted in dataresult['data']['list']:
+            if(trusted['is_current_device'] == 1):
+                self._tokenExpiration = (datetime.now() + timedelta(days=365*100))
+                isTrusted = True
+
+        return 'OK' if isTrusted else 'KO'
 
     @property
     def connected(self):
@@ -167,9 +220,11 @@ class Api():
     @property 
     def token_expire_at(self):
         return self._tokenExpiration.timestamp()
+    
     @property 
     def domain(self):
         return self._domain
+    
     async def _request(self, method, url, data, headers={}) -> requests.Response:
         try:
             loop = asyncio.get_running_loop()
@@ -186,7 +241,7 @@ class Api():
         url = self.base_url + url
         
         newHeaders = copy.copy(headers)
-        if(url != ENDPOINT_LOGIN):
+        if(url != ENDPOINT_LOGIN or 'verify_code' in data):
             newHeaders['X-Auth-Token'] = self._token
         
         

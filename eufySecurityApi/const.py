@@ -1,27 +1,29 @@
 from enum import Enum
 
 class TWO_FACTOR_AUTH_METHODS(Enum):
-    SMS = 0,
-    PUSH = 1,
+    SMS = 0
+    PUSH = 1
     EMAIL = 2
 
 API_BASE_URL = 'mysecurity.eufylife.com/api'
 # API_BASE_URL = 'security-app-eu.eufylife.com'
 ENDPOINT_LOGIN = '/passport/login'
+ENDPOINT_REQUEST_VERIFY_CODE = '/sms/send/verify_code'
 ENDPOINT_LOGOUT = '/passport/logout'
 ENDPOINT_DEVICE_LIST = '/app/get_devs_list'
 ENDPOINT_STATION_LIST = '/app/get_hub_list'
-
+ENDPOINT_TRUST_DEVICE_ADD = '/app/trust_device/add'
+ENDPOINT_TRUST_DEVICE_LIST = '/app/trust_device/list'
 MOTION_DETECTION_COOLDOWN_MS = 3000
 
 API_HEADERS = {
     'app_version': "v2.3.0_792",
     'os_type': "android",
     'os_version': "29",
-    'phone_model': "ONEPLUS A3003",
+    'phone_model': "Python Api",
     'country': "IT",
     'language': "en",
-    'openudid': "5e4621b0152c0d00",
+    'openudid': "5e4621b0152c0d13",
     'uid': "",
     'net_type': "wifi",
     'mnc': "02",
@@ -146,6 +148,7 @@ class PARAM_TYPE(Enum):
     CAMERA_PIR                          = 1011
     CAMERA_WIFI_RSSI                    = 1142
     CAMERA_MOTION_ZONES                 = 1204
+    CAMERA_MOTION_NOTIFICATION_SETTINGS = 1225
 
     SENSOR_CONTACT_OPEN                 = 1550  # 0 - Close, 1 - Open
     
