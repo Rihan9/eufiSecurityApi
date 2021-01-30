@@ -56,6 +56,7 @@ class Device(object):
         # self._attribute = {}
         self._notRecognizedAttribute = {}
         self._attribute = AttributeWrapper()
+        self._callbacks = {}
     
     def __setattr__(self, key, value):
         frameStack = traceback.extract_stack(limit=2)[0]
@@ -82,7 +83,6 @@ class Device(object):
         self.model = apiDict['device_model']
         self.status = DEVICE_STATE(apiDict['status'])
         self._type = DEVICE_TYPE(apiDict['device_type'])
-        self._callbacks = {}
         for attribute in apiDict['params']:
             try:
                 self._attribute[PARAM_TYPE(attribute['param_type'])] = attribute['param_value']
