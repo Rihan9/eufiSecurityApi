@@ -200,7 +200,7 @@ class Api():
         isTrusted = False
         for trusted in dataresult['data']['list']:
             if(trusted['is_current_device'] == 1):
-                self._tokenExpiration = (datetime.now() + timedelta(days=365*100))
+                self._tokenExpiration = (datetime.now() + timedelta(days=365*10))
                 isTrusted = True
 
         return 'OK' if isTrusted else 'KO'
