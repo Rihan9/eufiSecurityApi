@@ -1,4 +1,5 @@
 from enum import Enum
+import uuid
 
 class TWO_FACTOR_AUTH_METHODS(Enum):
     SMS = 0
@@ -23,12 +24,12 @@ API_HEADERS = {
     'phone_model': "Python Api",
     'country': "IT",
     'language': "en",
-    'openudid': "5e4621b0152c0d13",
+    'openudid': '0000'+hex(uuid.getnode())[2:],
     'uid': "",
     'net_type': "wifi",
     'mnc': "02",
     'mcc': "262",
-    'sn': "75814221ee75",
+    'sn': hex(uuid.getnode())[2:],
     'Model_type': "PHONE",
     'timezone': "GMT+01:00",
     'Content-Type': 'application/json'
