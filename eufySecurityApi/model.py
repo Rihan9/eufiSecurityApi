@@ -108,6 +108,11 @@ class Device(object):
         updatedAttributes = []
         for key in apiDict.keys():
             if key not in EXCLUDED_ROOT_PROPERTY:
+                if(key == 'wifi_mac' and ':' not in apiDict[key]):
+                    new_mac = ''
+                    for i in range(0,len(apiDict[key]),2):
+                        new_mac += apiDict[key][i:i+2] + ':'
+                    apiDict[key] = new_mac[:-1]
                 if(key in self.__dict__ and self.__dict__[key] != apiDict[key]):
                     self._logger.info('%s updated %s: %s -> %s' %(self.name, key, self.__dict__[key], apiDict[key]))
                     self.__dict__[key] = apiDict[key]

@@ -96,7 +96,8 @@ class PARAM_TYPE(Enum):
     # PROP_WIFI_MAC             = 'wifi_mac'
     PROP_STATUS             = 'status'
     #
-    BATTERY_LEVEL                   = 1101 #Maybe? 1177
+    BATTERY_LEVEL                   = 1101
+    POWER_MODE                      = 2111
     DEVICE_UPGRADE_NOW              = 1134
     DEVICE_RSSI                     = 1141
     
@@ -126,6 +127,7 @@ class PARAM_TYPE(Enum):
     DOORBELL_LED_NIGHT_MODE         = 2039
     DOORBELL_RING_RECORD            = 2040
     DOORBELL_AUDIO_RECODE           = 2042
+
 
     WATERMARK_MODE          = 1214              # 1 - hide, 2 - show
     SNOOZE_MODE             = 1271              # The value is base64 encoded
@@ -173,3 +175,9 @@ class GUARD_MODE(Enum):
     OFF         = '6'
 
 EXCLUDED_ROOT_PROPERTY = ['station_conn', 'member', 'permission', 'params', 'status']
+
+class POWER_MODE(Enum):
+#    CHARGING = '0'
+    PLUGGED     = '1'
+    UNPLUGGED   = '2'
+    LINE_MODE   = '3'
