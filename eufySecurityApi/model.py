@@ -239,6 +239,14 @@ class Device(object):
             DEVICE_TYPE.LOCK_ADVANCED_NO_FINGER
         ]
 
+    @property
+    def isDoorSensor(self):
+        return self._type in [
+            DEVICE_TYPE.SENSOR
+        ] and self.model in [
+            'T8900'
+        ]
+
 
 class Station(Device):
     deviceType= [DEVICE_TYPE.STATION]
